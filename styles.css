@@ -218,3 +218,193 @@
 .forge-create-buttons { display: flex; justify-content: flex-end; gap: 8px; }
 .forge-context-input-row { display: flex; gap: 6px; margin-bottom: 10px; }
 .forge-context-input-row input { flex: 1; padding: 6px 8px; }
+
+/* ==================== DATES IN ROW ==================== */
+
+.forge-date {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.forge-start-date {
+  color: var(--text-muted);
+  background: var(--background-modifier-hover);
+}
+
+.forge-due-date {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.forge-review-date {
+  color: var(--text-accent);
+  background: var(--background-modifier-hover);
+}
+
+.forge-date-future {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.forge-date-past {
+  color: var(--text-warning);
+  font-weight: 600;
+}
+
+.forge-overdue {
+  color: var(--text-error) !important;
+  font-weight: 700;
+}
+
+.forge-due-today {
+  color: var(--text-warning) !important;
+  font-weight: 700;
+}
+
+/* ==================== DATE DIALOG ==================== */
+
+.forge-date-modal {
+  max-width: 320px;
+}
+
+.forge-date-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+}
+
+.forge-date-input:focus {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+.forge-modal {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.forge-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.forge-modal-close {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.forge-modal-close:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.forge-modal-body {
+  padding: 16px;
+}
+
+.forge-modal-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.forge-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.forge-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.forge-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==================== SMART VIEW INTERACTIVE ELEMENTS ==================== */
+
+.forge-sp-clickable {
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: background 0.15s ease;
+}
+
+.forge-sp-clickable:hover {
+  background: var(--background-modifier-hover);
+}
+
+.forge-starred {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.forge-starred:hover {
+  transform: scale(1.2);
+}
+
+/* Smart row context menu hint */
+.forge-smart-row {
+  position: relative;
+}
+
+.forge-smart-row:hover::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  opacity: 0.3;
+  background: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='12' cy='5' r='1'/%3E%3Ccircle cx='12' cy='19' r='1'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='12' cy='5' r='1'/%3E%3Ccircle cx='12' cy='19' r='1'/%3E%3C/svg%3E");
+}
+
+/* ==================== DATE DISPLAY MODES ==================== */
+
+.forge-due-none {
+  opacity: 0.4;
+  font-style: italic;
+}
+
+/* ==================== DISPLAY OPTIONS BUTTON ==================== */
+
+.forge-icon-btn.forge-display-active {
+  color: var(--interactive-accent);
+}
