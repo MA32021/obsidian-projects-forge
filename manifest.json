@@ -1,0 +1,9 @@
+{
+  "id": "projects-forge",
+  "name": "Projects Forge",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Hierarchical task, project, and folder management in a dedicated side panel. Each element is a Markdown note with frontmatter.",
+  "author": "ProjectsForge",
+  "isDesktopOnly": false
+}

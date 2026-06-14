@@ -1,0 +1,20 @@
+{
+  "name": "projects-forge",
+  "version": "1.0.0",
+  "description": "Hierarchical task, project, and folder management in a dedicated side panel for Obsidian.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": ["obsidian", "tasks", "projects", "gtd", "scrum"],
+  "author": "ProjectsForge",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.19.0",
+    "obsidian": "latest",
+    "typescript": "^5.3.0"
+  }
+}
