@@ -240,11 +240,11 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 ### Development setup
 
-bash
-
+```bash
 npm install
 npm run dev     # watch mode
 npm run build   # production build
+```
 
 ### Project structure
 
