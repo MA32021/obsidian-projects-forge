@@ -188,6 +188,7 @@ export class ForgeTreeView extends ItemView {
     row.style.paddingLeft = `${depth * 16 + 4}px`;
     row.setAttr('draggable', 'true');
 
+    // Drag & Drop
     row.addEventListener('dragstart', (e) => {
       this.draggedPath = el.path;
       e.dataTransfer?.setData('text/plain', el.path);
@@ -211,7 +212,11 @@ export class ForgeTreeView extends ItemView {
       this.showContextMenu(e, el);
     });
 
-    const toggle = row.createDiv({ cls: 'forge-toggle' });
+    // ========== ПЕРВАЯ СТРОКА: Toggle + Icon + Title ==========
+    const line1 = row.createDiv({ cls: 'forge-row-line1' });
+
+    // Toggle
+    const toggle = line1.createDiv({ cls: 'forge-toggle' });
     if ((el.isFolder || el.isProject) && hasChildren) {
       setIcon(toggle, isCollapsed ? 'chevron-right' : 'chevron-down');
       toggle.addEventListener('click', (e) => {
@@ -222,7 +227,8 @@ export class ForgeTreeView extends ItemView {
       });
     }
 
-    const icon = row.createDiv({ cls: 'forge-status-icon' });
+    // Status icon
+    const icon = line1.createDiv({ cls: 'forge-status-icon' });
     if (el.isFolder) {
       icon.setText('📁');
       icon.addClass('forge-folder-icon');
@@ -237,87 +243,104 @@ export class ForgeTreeView extends ItemView {
       });
     }
 
-    const titleCls = el.isProject ? 'forge-title forge-project-title' : 'forge-title';
-    const title = row.createDiv({ cls: titleCls, text: el.title });
+    // Title
+    const titleCls = el.isProject ? 'forge-project-title' : '';
+    const title = line1.createDiv({ cls: `forge-title ${titleCls}`, text: el.title });
+    if (el.status === 'done') title.addClass('forge-done');
     title.addEventListener('click', () => void this.openElement(el));
 
-    // ========== Starred (управляется showStarred) ==========
-    if (!el.isFolder && this.showStarred) {
-      const star = row.createDiv({ cls: 'forge-star', text: el.starred ? '⭐' : '☆' });
-      star.addEventListener('click', (e) => {
-        e.stopPropagation();
-        void this.mutate('Toggle star', [el.path], async () => {
-          await this.plugin.parser.toggleStar(el.file, !el.starred);
-        });
-      });
-    }
+    // ========== ВТОРАЯ СТРОКА: Metadata ==========
+    const line2 = row.createDiv({ cls: 'forge-row-line2' });
+    const hasMetadata = this.hasAnyMetadata(el);
 
-    // ========== Story Points (управляется showStoryPoints) ==========
-    if (!el.isFolder && this.showStoryPoints) {
-      const sp = row.createDiv({
-        cls: 'forge-sp-chip',
-        text: el.storyPoints !== null ? `SP:${el.storyPoints}` : 'SP:–',
-      });
-      sp.addEventListener('click', (e) => {
-        e.stopPropagation();
-        StoryPointsPicker.show(sp, el.storyPoints, (value) => {
-          void this.mutate('Set story points', [el.path], async () => {
-            await this.plugin.parser.setStoryPoints(el.file, value);
+    if (hasMetadata) {
+      // Starred
+      if (!el.isFolder && this.showStarred) {
+        const star = line2.createSpan({ cls: 'forge-meta-item forge-meta-star', text: el.starred ? '⭐' : '☆' });
+        star.addEventListener('click', (e) => {
+          e.stopPropagation();
+          void this.mutate('Toggle star', [el.path], async () => {
+            await this.plugin.parser.toggleStar(el.file, !el.starred);
           });
         });
-      });
-    }
-
-    // ========== Priority (управляется showPriority) ==========
-    if (!el.isFolder && this.showPriority && el.priority > 0) {
-      row.createDiv({ cls: 'forge-priority', text: `P${el.priority}` });
-    }
-
-    if (el.taskBlock) {
-      const tb = this.plugin.index.getTaskBlock(el.taskBlock);
-      const name = tb ? tb.name : el.taskBlock.split('/').pop()?.replace(/\.md$/, '') ?? '';
-      row.createDiv({ cls: 'forge-taskblock-tag', text: `📦 ${name}` });
-    }
-
-    this.renderContexts(row, el);
-
-    // ========== Даты ==========
-    if (el.startDate) {
-      const text = this.formatDateDisplay(el.startDate, '▶');
-      const start = row.createDiv({ cls: 'forge-date forge-start-date', text });
-      if (this.dateDisplayMode === 'full') {
-        const startDays = daysUntil(el.startDate);
-        if (startDays !== null && startDays > 0) start.addClass('forge-date-future');
       }
+
+      // Story Points
+      if (!el.isFolder && this.showStoryPoints) {
+        const sp = line2.createSpan({
+          cls: 'forge-meta-item forge-meta-sp',
+          text: el.storyPoints !== null ? `SP:${el.storyPoints}` : 'SP:–',
+        });
+        sp.addEventListener('click', (e) => {
+          e.stopPropagation();
+          StoryPointsPicker.show(sp, el.storyPoints, (value) => {
+            void this.mutate('Set story points', [el.path], async () => {
+              await this.plugin.parser.setStoryPoints(el.file, value);
+            });
+          });
+        });
+      }
+
+      // Priority
+      if (!el.isFolder && this.showPriority && el.priority > 0) {
+        line2.createSpan({ cls: 'forge-meta-item forge-meta-priority', text: `P${el.priority}` });
+      }
+
+      // Task Block
+      if (el.taskBlock) {
+        const tb = this.plugin.index.getTaskBlock(el.taskBlock);
+        const name = tb ? tb.name : el.taskBlock.split('/').pop()?.replace(/\.md$/, '') ?? '';
+        line2.createSpan({ cls: 'forge-meta-item forge-meta-taskblock', text: `📦 ${name}` });
+      }
+
+      // Start date
+      if (el.startDate) {
+        const text = this.formatDateDisplay(el.startDate, '▶');
+        line2.createSpan({ cls: 'forge-meta-item forge-meta-date forge-meta-start', text });
+      }
+
+      // Due date
+      if (el.dueDate) {
+        const text = this.formatDateDisplay(el.dueDate, '📅');
+        const due = line2.createSpan({ cls: 'forge-meta-item forge-meta-date forge-meta-due', text });
+        const days = daysUntil(el.dueDate);
+        if (days !== null && days < 0) due.addClass('forge-overdue');
+        else if (days === 0) due.addClass('forge-due-today');
+      } else if (this.dateDisplayMode === 'days-left' && !el.isFolder) {
+        line2.createSpan({ cls: 'forge-meta-item forge-meta-date forge-meta-due forge-due-none', text: '📅 ∞' });
+      }
+
+      // Review date
+      if (el.reviewDate) {
+        const text = this.formatDateDisplay(el.reviewDate, '🔄');
+        line2.createSpan({ cls: 'forge-meta-item forge-meta-date forge-meta-review', text });
+      }
+    } else if (!el.isFolder) {
+      // Показываем placeholder для единообразия
+      line2.createSpan({ cls: 'forge-meta-empty', text: '—' });
     }
 
-    if (el.dueDate) {
-      const text = this.formatDateDisplay(el.dueDate, '📅');
-      const due = row.createDiv({ cls: 'forge-date forge-due-date', text });
-      const days = daysUntil(el.dueDate);
-      if (days !== null && days < 0) due.addClass('forge-overdue');
-      else if (days === 0) due.addClass('forge-due-today');
-    }
-
-    if (el.reviewDate) {
-      const text = this.formatDateDisplay(el.reviewDate, '🔄');
-      const review = row.createDiv({ cls: 'forge-date forge-review-date', text });
-      const reviewDays = daysUntil(el.reviewDate);
-      if (reviewDays !== null && reviewDays < 0) review.addClass('forge-date-past');
-      else if (reviewDays === 0) review.addClass('forge-due-today');
-    }
-
-    // ========== Заглушка для due date если не задана (только в days-left режиме) ==========
-    if (!el.dueDate && this.dateDisplayMode === 'days-left' && !el.isFolder) {
-      row.createDiv({ cls: 'forge-date forge-due-none', text: '📅 ∞' });
-    }
-
+    // ========== Рендерим детей ==========
     if (hasChildren && !isCollapsed && !autoCollapsed) {
       for (const child of node.children) {
         this.renderNode(parent, child, depth + 1);
       }
     }
   }
+
+  /**
+   * Проверяет, есть ли у элемента какие-либо метаданные для отображения.
+   */
+  private hasAnyMetadata(el: ForgeElement): boolean {
+    if (!el.isFolder) {
+      if (this.showStarred || this.showStoryPoints || this.showPriority) return true;
+      if (el.priority > 0 || el.starred || el.storyPoints !== null) return true;
+    }
+    if (el.taskBlock) return true;
+    if (el.startDate || el.dueDate || el.reviewDate) return true;
+    if (this.dateDisplayMode === 'days-left' && !el.isFolder) return true;
+    return false;
+  }  
 
   private renderContexts(row: HTMLElement, el: ForgeElement): void {
     if (el.contexts.length === 0) return;
@@ -357,44 +380,35 @@ export class ForgeTreeView extends ItemView {
       const urgency = PriorityEngine.urgency(score);
       const row = list.createDiv({ cls: `forge-smart-row forge-urgency-${urgency}` });
 
-      // Контекстное меню на всей строке
       row.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.showContextMenu(e, element);
       });
 
-      const check = row.createDiv({ cls: 'forge-checkbox', text: '☐' });
+      // ========== ПЕРВАЯ СТРОКА ==========
+      const line1 = row.createDiv({ cls: 'forge-row-line1' });
+
+      const check = line1.createDiv({ cls: 'forge-checkbox', text: '☐' });
       check.addEventListener('click', (e) => {
         e.stopPropagation();
         void this.mutate('Complete task', [element.path], async () => {
           await this.plugin.parser.setStatus(element.file, 'done');
         });
       });
-      // Контекстное меню на чекбоксе
-      check.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showContextMenu(e, element);
-      });
 
-      const main = row.createDiv({ cls: 'forge-smart-main' });
-      const titleCls = element.isProject ? 'forge-title forge-project-title' : 'forge-title';
-      const title = main.createDiv({ cls: titleCls, text: element.title });
+      const titleCls = element.isProject ? 'forge-project-title' : '';
+      const title = line1.createDiv({ cls: `forge-title ${titleCls}`, text: element.title });
       title.addEventListener('click', () => void this.openElement(element));
-      // Контекстное меню на названии
-      title.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showContextMenu(e, element);
-      });
 
-      const meta = main.createDiv({ cls: 'forge-smart-meta' });
+      const scoreEl = line1.createDiv({ cls: 'forge-score', text: `⚡${score}` });
 
-      // Starred
+      // ========== ВТОРАЯ СТРОКА ==========
+      const line2 = row.createDiv({ cls: 'forge-row-line2' });
+
       if (this.showStarred && element.starred) {
-        const starredEl = meta.createSpan({ cls: 'forge-starred', text: '⭐' });
-        starredEl.addEventListener('click', (e) => {
+        const star = line2.createSpan({ cls: 'forge-meta-item forge-meta-star', text: '⭐' });
+        star.addEventListener('click', (e) => {
           e.stopPropagation();
           void this.mutate('Toggle star', [element.path], async () => {
             await this.plugin.parser.toggleStar(element.file, !element.starred);
@@ -402,17 +416,14 @@ export class ForgeTreeView extends ItemView {
         });
       }
 
-      // Priority
-      if (this.showPriority && element.priority > 0) {
-        meta.createSpan({ text: `P${element.priority}` });
-      }
-
-      // Story Points
       if (this.showStoryPoints && element.storyPoints !== null) {
-        const spEl = meta.createSpan({ cls: 'forge-sp-clickable', text: `SP:${element.storyPoints}` });
-        spEl.addEventListener('click', (e) => {
+        const sp = line2.createSpan({
+          cls: 'forge-meta-item forge-meta-sp',
+          text: `SP:${element.storyPoints}`,
+        });
+        sp.addEventListener('click', (e) => {
           e.stopPropagation();
-          StoryPointsPicker.show(spEl, element.storyPoints, (value) => {
+          StoryPointsPicker.show(sp, element.storyPoints, (value) => {
             void this.mutate('Set story points', [element.path], async () => {
               await this.plugin.parser.setStoryPoints(element.file, value);
             });
@@ -420,34 +431,24 @@ export class ForgeTreeView extends ItemView {
         });
       }
 
-      // Due date
-      if (element.dueDate) {
-        const dueText = this.formatDateDisplay(element.dueDate, '📅');
-        meta.createSpan({ cls: 'forge-due', text: dueText });
-      } else if (this.dateDisplayMode === 'days-left') {
-        meta.createSpan({ cls: 'forge-due forge-due-none', text: '📅 ∞' });
+      if (this.showPriority && element.priority > 0) {
+        line2.createSpan({ cls: 'forge-meta-item forge-meta-priority', text: `P${element.priority}` });
       }
 
-      // Score
-      meta.createSpan({ cls: 'forge-score', text: `⚡${score}` });
+      if (element.dueDate) {
+        const dueText = this.formatDateDisplay(element.dueDate, '📅');
+        const due = line2.createSpan({ cls: 'forge-meta-item forge-meta-date forge-meta-due', text: dueText });
+        const days = daysUntil(element.dueDate);
+        if (days !== null && days < 0) due.addClass('forge-overdue');
+        else if (days === 0) due.addClass('forge-due-today');
+      } else if (this.dateDisplayMode === 'days-left') {
+        line2.createSpan({ cls: 'forge-meta-item forge-meta-date forge-due-none', text: '📅 ∞' });
+      }
 
-      // Контекстное меню на мета-данных
-      meta.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showContextMenu(e, element);
-      });
-
-      this.renderContexts(main, element);
-
-      // Контекстное меню на контекстах
-      const ctxWrap = main.querySelector('.forge-ctx-wrap');
-      if (ctxWrap) {
-        (ctxWrap as HTMLElement).addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.showContextMenu(e, element);
-        });
+      if (element.taskBlock) {
+        const tb = this.plugin.index.getTaskBlock(element.taskBlock);
+        const name = tb ? tb.name : element.taskBlock.split('/').pop()?.replace(/\.md$/, '') ?? '';
+        line2.createSpan({ cls: 'forge-meta-item forge-meta-taskblock', text: `📦 ${name}` });
       }
     }
   }
